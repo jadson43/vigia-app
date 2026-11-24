@@ -1,0 +1,25 @@
+VIGIA - Como usar
+==================
+
+O app precisa rodar em HTTPS (ou em localhost) para a câmera e a biometria funcionarem.
+
+OPÇÃO 1 - Celular (e computador), a mais fácil
+1. Acesse https://app.netlify.com/drop
+2. Arraste a PASTA com estes arquivos para a página. Você ganha um link https://...netlify.app
+3. Abra o link no celular. No Chrome: menu ⋮ > "Instalar aplicativo" (ou "Adicionar à tela inicial").
+4. Faça o cadastro (7 passos) e toque em "Ativar proteção".
+
+OPÇÃO 2 - Somente no computador
+1. Abra um terminal dentro desta pasta e rode:  python -m http.server 8080
+2. Abra http://localhost:8080 no Chrome ou Edge.
+3. Menu > "Instalar Vigia" (opcional) e faça o cadastro.
+
+PRIMEIRO USO DO E-MAIL
+O envio usa o serviço gratuito FormSubmit. Na primeira vez ele manda um e-mail de ativação:
+abra e clique em ativar. Depois use "Enviar e-mail de teste" de novo.
+
+LIMITES (importante)
+Por ser um aplicativo web instalado (PWA), ele NÃO consegue bloquear: botão liga/desliga, botão
+início, barra de notificações, Ctrl+Alt+Del, tecla Windows, nem detectar botões de volume.
+Um bloqueio total do sistema exige a versão nativa descrita no arquivo PROMPT_app_antifurto_vigia.md.
+Use somente em aparelhos seus.

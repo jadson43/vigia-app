@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Vigia</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0b1220;--card:#131c2e;--line:#243049;--ink:#e8eefc;--mut:#93a1bd;--acc:#2dd4bf;--bad:#ef4444;--warn:#f59e0b}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.hidden{display:none!important}
+.screen{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.6rem;margin:.1em 0 .2em}
+h2{font-size:1.2rem;margin:.2em 0 .6em}
+p{margin:.4em 0}
+.mut{color:var(--mut);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+label{display:block;font-weight:600;margin:12px 0 6px}
+input,textarea,select{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#0e1627;color:var(--ink);font:inherit}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
+textarea{min-height:110px;resize:vertical}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:13px 16px;cursor:pointer;background:#22304d;color:var(--ink)}
+button:active{transform:scale(.98)}
+button.pri{background:var(--acc);color:#04201c}
+button.bad{background:var(--bad);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.pick{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 10px;border:2px solid var(--line);background:#0e1627}
+.pick.sel{border-color:var(--acc);background:#0f2a2a}
+.pick .ic{font-size:2rem}
+.dots{display:flex;gap:6px;margin:8px 0 4px}
+.dots i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.dots i.on{background:var(--acc)}
+.nav{display:flex;gap:10px;margin-top:16px}
+.nav button{flex:1}
+.msg{margin:10px 0;padding:10px 12px;border-radius:10px;background:#0e1627;border:1px solid var(--line);font-size:.95rem}
+.msg.ok{border-color:#14746a;color:#8af3e5}
+.msg.err{border-color:#7f1d1d;color:#fca5a5}
+video.prev{width:100%;max-height:300px;border-radius:14px;background:#000;object-fit:cover;margin-top:10px}
+.bar{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin:10px 0}
+.bar>div{height:100%;width:0;background:var(--acc);transition:width .3s}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-weight:500}
+.chk input{width:22px;height:22px;margin-top:2px;flex:0 0 auto}
+ul.log{list-style:none;margin:0;padding:0;font-size:.9rem}
+ul.log li{padding:7px 0;border-bottom:1px solid var(--line)}
+ul.log time{color:var(--mut);margin-right:8px}
+details{margin:12px 0}
+summary{cursor:pointer;font-weight:700}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2b45;color:#fff;padding:12px 18px;border-radius:12px;z-index:3000;max-width:90vw;box-shadow:0 6px 24px #0008;font-size:.95rem}
+/* telas cheias */
+.full{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;user-select:none;-webkit-user-select:none;touch-action:none;overflow:hidden}
+#standby{background:radial-gradient(circle at 50% 30%,#1b2a4a,#05080f 70%);color:#fff}
+#clock{font-size:clamp(4rem,18vw,9rem);font-weight:200;letter-spacing:2px}
+#dateTxt{font-size:1.2rem;color:#cbd5e1;text-transform:capitalize}
+#standbyNote{position:absolute;bottom:28px;font-size:.85rem;color:#64748b}
+#lock{background:radial-gradient(circle at 50% 20%,#7f1d1d,#1a0505 75%);color:#fff;touch-action:auto;overflow-y:auto;justify-content:space-between}
+#lockMsg{font-size:clamp(1.6rem,5.5vw,3.2rem);font-weight:800;line-height:1.25;max-width:900px;white-space:pre-wrap;margin:auto 0;padding:12px 0;text-shadow:0 2px 20px #000a}
+#lockBottom{width:min(94vw,560px);margin-bottom:max(8px,env(safe-area-inset-bottom))}
+.codebar{display:flex;gap:8px}
+.codebar input{font-size:1.5rem;text-align:center;letter-spacing:.35em;background:#fff;color:#111;border:0;border-radius:14px;font-weight:700}
+.codebar button{background:var(--acc);color:#04201c;font-size:1.05rem;padding:0 20px}
+.lockbtns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.lockbtns button{flex:1 1 130px;background:#ffffff22;color:#fff;font-size:.9rem}
+#lockStatus{min-height:1.5em;margin:10px 0;font-size:.95rem;color:#fde68a}
+#camLock{width:150px;height:150px;border-radius:50%;object-fit:cover;border:3px solid var(--acc);margin:8px auto;display:block;transform:scaleX(-1)}
+#cam{position:fixed;left:0;top:0;width:2px;height:2px;opacity:.01;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- ====== CADASTRO ====== -->
+<section id="setup" class="screen hidden">
+  <h1>🛡️ Vigia</h1>
+  <p class="mut" id="stepTitle"></p>
+  <div class="dots" id="dots"></div>
+
+  <div class="step" data-step="1">
+    <h2>Em qual aparelho o app será usado?</h2>
+    <div class="row">
+      <button class="pick" data-act="pickDevice" data-device="mobile"><span class="ic">📱</span>Celular / Tablet</button>
+      <button class="pick" data-act="pickDevice" data-device="desktop"><span class="ic">💻</span>Notebook / Computador</button>
+    </div>
+    <div id="facingBox" class="hidden">
+      <label for="facing">Câmera usada para fotografar e verificar</label>
+      <select id="facing" data-k="facing">
+        <option value="user">Frontal (selfie)</option>
+        <option value="environment">Traseira</option>
+      </select>
+    </div>
+    <p class="mut" style="margin-top:12px">No computador/notebook o app usa a câmera frontal.</p>
+    <div class="chk" style="margin-top:16px"><input type="checkbox" id="ownDevice"><label for="ownDevice" style="margin:0;font-weight:500">Confirmo que este aparelho é meu e que vou usar o app apenas nele.</label></div>
+  </div>
+
+  <div class="step" data-step="2">
+    <h2>E-mail do dono</h2>
+    <p class="mut">Para este e-mail vão a foto de quem mexer no aparelho e o código de desbloqueio.</p>
+    <label for="email">E-mail</label>
+    <input id="email" type="email" inputmode="email" autocomplete="email" data-k="email" placeholder="voce@exemplo.com">
+    <label for="email2">Confirme o e-mail</label>
+    <input id="email2" type="email" inputmode="email" data-k="emailConfirm" placeholder="voce@exemplo.com">
+    <div class="row" style="margin-top:12px"><button data-act="testEmail" id="btnTestEmail">Enviar e-mail de teste</button></div>
+    <div class="msg" id="emailMsg">Na <b>primeira vez</b>, o serviço de envio (FormSubmit) manda um e-mail de ativação. Abra-o e clique no botão de ativar. Depois disso, os envios passam a chegar normalmente.</div>
+  </div>
+
+  <div class="step" data-step="3">
+    <h2>Mensagem em tela cheia</h2>
+    <p class="mut">Este texto aparece para qualquer pessoa que tocar no aparelho com a proteção ativa.</p>
+    <label for="message">Mensagem</label>
+    <textarea id="message" data-k="message" maxlength="400"></textarea>
+    <div class="card" style="background:#2b0b0b;text-align:center;font-weight:800" id="msgPrev"></div>
+  </div>
+
+  <div class="step" data-step="4">
+    <h2>Cadastre o seu rosto</h2>
+    <p class="mut">Vamos tirar 5 amostras. Fique em local bem iluminado e siga as instruções. Só um vetor numérico do rosto fica guardado neste aparelho, nunca a foto.</p>
+    <video id="camPrev" class="prev hidden" playsinline muted></video>
+    <div class="bar"><div id="enrollBar"></div></div>
+    <div class="msg" id="enrollMsg">Nenhum rosto cadastrado.</div>
+    <div class="row"><button class="pri" data-act="enroll" id="btnEnroll">Abrir câmera e cadastrar rosto</button></div>
+  </div>
+
+  <div class="step" data-step="5">
+    <h2>Desbloqueio</h2>
+    <p class="mut">Além do código enviado ao e-mail, você pode liberar o aparelho por biometria e por um PIN de emergência (para quando estiver sem internet).</p>
+    <div class="row"><button data-act="bioReg" id="btnBio">Cadastrar biometria do aparelho</button></div>
+    <div class="msg" id="bioMsg">Biometria não cadastrada (opcional).</div>
+    <label for="pin">PIN de emergência (6 a 12 números, opcional)</label>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="new-password" data-k="pinPlain" placeholder="••••••">
+    <p class="mut" id="pinMsg"></p>
+    <div class="chk"><input type="checkbox" id="strict" data-k="strict"><label for="strict" style="margin:0;font-weight:500">Modo mais seguro: reconhecer o rosto <b>não</b> desbloqueia sozinho, ainda é preciso código ou biometria.</label></div>
+    <div class="chk"><input type="checkbox" id="mouse" data-k="mouse"><label for="mouse" style="margin:0;font-weight:500">Também disparar com movimento do mouse/trackpad (computador).</label></div>
+    <label for="delay">Tempo para eu me afastar depois de ativar</label>
+    <select id="delay" data-k="delay"><option value="5">5 segundos</option><option value="10">10 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select>
+  </div>
+
+  <div class="step" data-step="6">
+    <h2>Alertas extras (opcional)</h2>
+    <p class="mut">O WhatsApp não permite envio automático de fotos por apps comuns. Por isso: o <b>Telegram</b> recebe a foto na hora e o <b>WhatsApp</b> recebe um aviso em texto (via CallMeBot).</p>
+    <details>
+      <summary>Telegram (foto na hora)</summary>
+      <p class="mut">Crie um bot com o @BotFather, copie o token, mande uma mensagem ao bot e use o @userinfobot para saber o seu ID.</p>
+      <label for="tgt">Token do bot</label><input id="tgt" data-k="tg.token" autocomplete="off">
+      <label for="tgc">Seu chat ID</label><input id="tgc" data-k="tg.chat" inputmode="numeric" autocomplete="off">
+    </details>
+    <details>
+      <summary>WhatsApp (aviso em texto)</summary>
+      <p class="mut">Ative o CallMeBot no seu WhatsApp (callmebot.com/blog/free-api-whatsapp-messages) e informe o telefone com DDI e a chave recebida.</p>
+      <label for="wap">Telefone (ex.: 5571999999999)</label><input id="wap" data-k="wa.phone" inputmode="numeric" autocomplete="off">
+      <label for="wak">Chave (apikey)</label><input id="wak" data-k="wa.key" autocomplete="off">
+    </details>
+  </div>
+
+  <div class="step" data-step="7">
+    <h2>Tudo pronto</h2>
+    <div class="card" id="summary"></div>
+    <p class="mut">Ao ativar a proteção, o app abre em tela cheia, liga a câmera e, depois da contagem regressiva, qualquer toque ou tecla dispara o alerta.</p>
+  </div>
+
+  <div class="msg err hidden" id="stepErr"></div>
+  <div class="nav">
+    <button data-act="back" id="btnBack">Voltar</button>
+    <button class="pri" data-act="next" id="btnNext">Avançar</button>
+  </div>
+</section>
+
+<!-- ====== PAINEL ====== -->
+<section id="panel" class="screen hidden">
+  <h1>🛡️ Vigia</h1>
+  <div class="card">
+    <h2 id="panelTitle">Proteção desligada</h2>
+    <div id="panelInfo" class="mut"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="pri" data-act="arm">🔒 Ativar proteção</button>
+      <button data-act="openSetup">⚙️ Configurações</button>
+    </div>
+    <div class="row hidden" id="installRow" style="margin-top:10px"><button data-act="install">📲 Instalar aplicativo</button></div>
+  </div>
+  <div class="card">
+    <h2>Histórico</h2>
+    <ul class="log" id="logList"></ul>
+  </div>
+  <details class="card">
+    <summary>O que este app consegue e o que não consegue</summary>
+    <p class="mut"><b>Consegue:</b> tela cheia, detectar teclas/toques/cliques, foto instantânea, envio por e-mail/Telegram, código de desbloqueio, biometria do aparelho e reconhecimento do rosto.</p>
+    <p class="mut"><b>Não consegue (limite do navegador/PWA):</b> bloquear o botão liga/desliga, o botão início, a barra de notificações, Ctrl+Alt+Del ou a tecla Windows, nem detectar botões físicos como volume. Quem fecha o app ou o navegador por esses meios sai da tela. Um bloqueio de verdade exige a versão nativa (Android em modo quiosque / Windows em modo quiosque), descrita no prompt.</p>
+    <p class="mut"><b>Dica:</b> abra o e-mail com o código em <u>outro</u> aparelho; se estiver no mesmo, as notificações podem aparecer para quem estiver com ele.</p>
+  </details>
+</section>
+
+<!-- ====== ESPERA (protegido) ====== -->
+<section id="standby" class="full hidden">
+  <div id="clock">00:00</div>
+  <div id="dateTxt"></div>
+  <div id="standbyNote"></div>
+</section>
+
+<!-- ====== BLOQUEIO ====== -->
+<section id="lock" class="full hidden">
+  <div id="lockMsg"></div>
+  <div id="lockBottom">
+    <video id="camLock" class="hidden" playsinline muted></video>
+    <div id="lockStatus"></div>
+    <div class="codebar">
+      <input id="code" type="password" inputmode="numeric" maxlength="12" autocomplete="off" placeholder="Código" aria-label="Código de desbloqueio">
+      <button data-act="unlockCode">OK</button>
+    </div>
+    <div class="lockbtns">
+      <button data-act="sendCode">✉️ Reenviar código</button>
+      <button data-act="bioUnlock" id="btnBioUnlock">☝️ Biometria</button>
+      <button data-act="faceUnlock" id="btnFaceUnlock">🙂 Reconhecer meu rosto</button>
+    </div>
+    <p class="mut" style="margin:10px 0 4px">Somente o dono pode liberar este aparelho.</p>
+  </div>
+</section>
+
+<video id="cam" playsinline muted autoplay></video>
+<canvas id="cv" class="hidden"></canvas>
+<div id="toast" class="hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js" crossorigin="anonymous"></script>
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const KEY='vigia_cfg_v1';
+const DEF={device:null,facing:'user',email:'',message:'Este aparelho está protegido.\nSua foto foi registrada e enviada ao dono.\nDevolva-o imediatamente.',descriptors:[],credId:null,pinSalt:null,pinHash:null,strict:false,mouse:false,delay:10,tg:{token:'',chat:''},wa:{phone:'',key:''},state:'setup',done:false,log:[]};
+const load=()=>{try{const s=JSON.parse(localStorage.getItem(KEY)||'{}');return {...structuredClone(DEF),...s}}catch{return structuredClone(DEF)}};
+let cfg=load();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(cfg))}catch{}};
+const getp=(o,p)=>p.split('.').reduce((a,k)=>a?.[k],o);
+const setp=(o,p,v)=>{const ks=p.split('.');const l=ks.pop();ks.reduce((a,k)=>a[k]=a[k]||{},o)[l]=v};
+const camFacing=()=>cfg.device==='desktop'?'user':cfg.facing;
+const mask=e=>e.replace(/^(.).*(@.*)$/,'$1•••$2');
+const errMsg=e=>e?.name==='NotAllowedError'?'Permissão negada. Libere a câmera/biometria nas configurações do navegador.':e?.name==='NotFoundError'?'Nenhuma câmera encontrada.':(e?.message||String(e));
+
+function toast(t,ms=3800){const el=$('#toast');el.textContent=t;el.classList.remove('hidden');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.add('hidden'),ms)}
+function view(n){['setup','panel','standby','lock'].forEach(i=>$('#'+i).classList.toggle('hidden',i!==n));document.body.style.overflow=(n==='standby'||n==='lock')?'hidden':''}
+function setState(s){cfg.state=s;save()}
+function log(x){cfg.log.unshift({t:Date.now(),x});cfg.log.length=Math.min(cfg.log.length,40);save();renderLog()}
+function renderLog(){const ul=$('#logList');if(!ul)return;ul.innerHTML='';if(!cfg.log.length){ul.innerHTML='<li class="mut">Nenhum evento ainda.</li>';return}cfg.log.slice(0,15).forEach(l=>{const li=document.createElement('li');const t=document.createElement('time');t.textContent=new Date(l.t).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});li.append(t,document.createTextNode(l.x));ul.append(li)})}
+
+/* ===== Câmera ===== */
+const cam=$('#cam');let stream=null;
+async function camStart(facing){
+  camStop();
+  if(!navigator.mediaDevices?.getUserMedia)throw new Error('Câmera indisponível. Abra o app por HTTPS ou localhost.');
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:640},height:{ideal:480}},audio:false});
+  cam.srcObject=stream;await cam.play().catch(()=>{});
+}
+function camStop(){stream?.getTracks().forEach(t=>t.stop());stream=null;['#cam','#camPrev','#camLock'].forEach(s=>{$(s).srcObject=null})}
+function snap(){
+  return new Promise(res=>{
+    try{
+      const w=cam.videoWidth,h=cam.videoHeight;if(!stream||!w||!h)return res(null);
+      const c=$('#cv'),s=Math.min(1,640/w);c.width=Math.round(w*s);c.height=Math.round(h*s);
+      c.getContext('2d').drawImage(cam,0,0,c.width,c.height);
+      c.toBlob(b=>res(b),'image/jpeg',0.72);
+    }catch{res(null)}
+  });
+}
+
+/* ===== Reconhecimento facial (face-api) ===== */
+const MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+let modelsP=null;
+function loadModels(onmsg){
+  if(modelsP)return modelsP;
+  modelsP=(async()=>{
+    if(!window.faceapi)throw new Error('A biblioteca de reconhecimento facial não carregou. Conecte-se à internet na primeira vez.');
+    onmsg?.('Carregando reconhecimento facial…');
+    await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)]);
+  })();
+  modelsP.catch(()=>{modelsP=null});
+  return modelsP;
+}
+async function describe(el){
+  const r=await faceapi.detectSingleFace(el,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.45})).withFaceLandmarks().withFaceDescriptor();
+  return r?Array.from(r.descriptor):null;
+}
+const dist=(a,b)=>Math.sqrt(a.reduce((s,v,i)=>s+(v-b[i])**2,0));
+const bestDist=d=>Math.min(...cfg.descriptors.map(x=>dist(d,x)));
+const TH=0.5;
+
+/* ===== Biometria (WebAuthn) e PIN ===== */
+const b64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function bioRegister(){
+  if(!window.PublicKeyCredential)throw new Error('Este navegador não oferece biometria.');
+  if(!(await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()))throw new Error('Este aparelho não tem biometria/PIN do sistema disponível.');
+  const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Vigia'},user:{id:crypto.getRandomValues(new Uint8Array(16)),name:draft.email||'dono',displayName:'Dono'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000,attestation:'none'}});
+  draft.credId=b64(c.rawId);
+}
+async function bioAuth(){
+  await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:unb64(cfg.credId),transports:['internal']}],userVerification:'required',timeout:60000}});
+}
+async function hashPin(pin,saltB64){
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pin),'PBKDF2',false,['deriveBits']);
+  return b64(await crypto.subtle.deriveBits({name:'PBKDF2',salt:unb64(saltB64),iterations:150000,hash:'SHA-256'},k,256));
+}
+
+/* ===== Envios ===== */
+async function sendEmail(to,{subject,message,blob}){
+  const fd=new FormData();
+  fd.append('_subject',subject);fd.append('_captcha','false');fd.append('_template','box');fd.append('message',message);
+  if(blob)fd.append('attachment',blob,'intruso_'+Date.now()+'.jpg');
+  const r=await fetch('https://formsubmit.co/ajax/'+to,{method:'POST',body:fd,headers:{Accept:'application/json'}});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||String(j.success)==='false')throw new Error(j.message||'Falha no envio do e-mail');
+  return j;
+}
+async function sendTelegram(blob,text){
+  const base='https://api.telegram.org/bot'+cfg.tg.token;const fd=new FormData();fd.append('chat_id',cfg.tg.chat);
+  let r;
+  if(blob){fd.append('caption',text);fd.append('photo',blob,'intruso.jpg');r=await fetch(base+'/sendPhoto',{method:'POST',body:fd})}
+  else{fd.append('text',text);r=await fetch(base+'/sendMessage',{method:'POST',body:fd})}
+  if(!r.ok)throw new Error('Telegram recusou o envio');
+}
+async function sendWhats(text){
+  await fetch(`https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(cfg.wa.phone)}&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(cfg.wa.key)}`,{mode:'no-cors'});
+}
+async function deliver(job,tries=3){for(let i=0;i<tries;i++){try{await job();return true}catch{await sleep(3000*(i+1))}}return false}
+const failed=[];
+window.addEventListener('online',()=>{failed.splice(0).forEach(([n,j])=>deliver(j,2).then(ok=>log(ok?`Alerta reenviado por ${n}`:`Falha ao reenviar por ${n}`)))});
+
+function sendAlert(blob,reason){
+  const t=new Date().toLocaleString('pt-BR');const dev=cfg.device==='mobile'?'Celular/Tablet':'Notebook/Computador';
+  const msg=`🚨 ${reason}\nAparelho: ${dev}\nData/hora: ${t}`;
+  const jobs=[];
+  if(cfg.email)jobs.push(['e-mail',()=>sendEmail(cfg.email,{subject:'🚨 Vigia: alguém mexeu no seu aparelho',message:msg,blob})]);
+  if(cfg.tg?.token&&cfg.tg?.chat)jobs.push(['Telegram',()=>sendTelegram(blob,msg)]);
+  if(cfg.wa?.phone&&cfg.wa?.key)jobs.push(['WhatsApp',()=>sendWhats(msg+'\nA foto foi enviada por e-mail/Telegram.')]);
+  jobs.forEach(([n,j])=>deliver(j,3).then(ok=>{log(ok?`Alerta enviado por ${n}`:`Falha no envio por ${n} (ficou na fila)`);if(!ok)failed.push([n,j])}));
+}
+
+/* ===== Cadastro ===== */
+let draft=null,step=1;const TOTAL=7;
+const TITLES=['Aparelho','E-mail','Mensagem','Rosto','Desbloqueio','Alertas extras','Revisão'];
+function openSetup(){draft=structuredClone(cfg);draft.emailConfirm=draft.email;draft.pinPlain='';step=1;view('setup');renderStep()}
+function renderStep(){
+  $$('.step').forEach(s=>s.classList.toggle('hidden',+s.dataset.step!==step));
+  $('#stepTitle').textContent=`Passo ${step} de ${TOTAL} · ${TITLES[step-1]}`;
+  $('#dots').innerHTML=Array.from({length:TOTAL},(_,i)=>`<i class="${i<step?'on':''}"></i>`).join('');
+  $('#btnBack').classList.toggle('hidden',step===1);
+  $('#btnNext').textContent=step===TOTAL?'✔ Concluir':'Avançar';
+  $$('[data-k]').forEach(el=>{const v=getp(draft,el.dataset.k);if(el.type==='checkbox')el.checked=!!v;else el.value=v??''});
+  $$('.pick').forEach(b=>b.classList.toggle('sel',b.dataset.device===draft.device));
+  $('#facingBox').classList.toggle('hidden',draft.device!=='mobile');
+  $('#ownDevice').checked=!!draft.own||cfg.done;
+  $('#stepErr').classList.add('hidden');
+  if(step===3)$('#msgPrev').textContent=draft.message;
+  if(step===4){$('#enrollMsg').textContent=draft.descriptors.length?`✔ Rosto cadastrado (${draft.descriptors.length} amostras). Você pode refazer.`:'Nenhum rosto cadastrado.';$('#enrollMsg').className='msg'+(draft.descriptors.length?' ok':'');$('#enrollBar').style.width=draft.descriptors.length?'100%':'0'}
+  if(step===5){$('#bioMsg').textContent=draft.credId?'✔ Biometria cadastrada.':'Biometria não cadastrada (opcional).';$('#pinMsg').textContent=cfg.pinHash?'Já existe um PIN salvo. Digite outro só se quiser trocar.':''}
+  if(step===7){$('#summary').innerHTML=`<div>📱 Aparelho: <b>${draft.device==='mobile'?'Celular/Tablet':'Notebook/Computador'}</b></div><div>✉️ E-mail: <b>${esc(draft.email)}</b></div><div>🙂 Rosto: <b>${draft.descriptors.length} amostras</b></div><div>☝️ Biometria: <b>${draft.credId?'sim':'não'}</b></div><div>🔑 PIN de emergência: <b>${(draft.pinPlain||cfg.pinHash)?'sim':'não'}</b></div><div>📨 Telegram: <b>${draft.tg.token?'sim':'não'}</b> · WhatsApp: <b>${draft.wa.phone?'sim':'não'}</b></div>`}
+}
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function validate(n){
+  if(n===1){if(!draft.device)return'Escolha o tipo de aparelho.';if(!$('#ownDevice').checked)return'Confirme que o aparelho é seu.';draft.own=true;if(draft.device==='desktop')draft.facing='user'}
+  if(n===2){if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email||''))return'Digite um e-mail válido.';if(draft.email!==(draft.emailConfirm||''))return'Os e-mails não conferem.'}
+  if(n===3&&!(draft.message||'').trim())return'Digite a mensagem da tela cheia.';
+  if(n===4&&(draft.descriptors||[]).length<3)return'Cadastre o seu rosto antes de continuar.';
+  if(n===5&&draft.pinPlain&&!/^\d{6,12}$/.test(draft.pinPlain))return'O PIN deve ter de 6 a 12 números.';
+  return null;
+}
+document.addEventListener('input',e=>{const el=e.target.closest?.('[data-k]');if(!el||!draft)return;let v=el.type==='checkbox'?el.checked:el.value;if(el.dataset.k==='delay')v=+v;setp(draft,el.dataset.k,v);if(el.dataset.k==='message')$('#msgPrev').textContent=v});
+document.addEventListener('change',e=>{const el=e.target.closest?.('[data-k]');if(el)el.dispatchEvent(new Event('input',{bubbles:true}))});
+
+async function enrollFace(){
+  const btn=$('#btnEnroll'),msg=$('#enrollMsg'),bar=$('#enrollBar'),pv=$('#camPrev');
+  btn.disabled=true;msg.className='msg';msg.textContent='Abrindo a câmera…';bar.style.width='0';
+  try{
+    await camStart(draft.device==='desktop'?'user':draft.facing);
+    pv.srcObject=stream;pv.style.transform=(draft.device==='desktop'||draft.facing==='user')?'scaleX(-1)':'none';pv.classList.remove('hidden');await pv.play().catch(()=>{});
+    await loadModels(m=>{msg.textContent=m});
+    const prompts=['Olhe de frente','Vire um pouco para a esquerda','Vire um pouco para a direita','Incline levemente o rosto','Olhe de frente novamente'];const out=[];
+    for(let i=0;i<prompts.length;i++){
+      msg.textContent=`(${i+1}/5) ${prompts[i]}`;await sleep(1300);
+      let got=null;const t0=Date.now();
+      while(!got&&Date.now()-t0<12000){got=await describe(cam);if(!got)await sleep(250)}
+      if(!got)throw new Error('Não consegui ver o seu rosto. Melhore a iluminação e tente de novo.');
+      out.push(got);bar.style.width=((i+1)*20)+'%';
+    }
+    draft.descriptors=out;msg.textContent=`✔ Rosto cadastrado (${out.length} amostras).`;msg.className='msg ok';
+  }catch(e){msg.textContent='⚠ '+errMsg(e);msg.className='msg err'}
+  finally{camStop();pv.classList.add('hidden');btn.disabled=false;btn.textContent='Refazer cadastro do rosto'}
+}
+
+/* ===== Proteção ===== */
+let armAt=0,lockCode=null,lastCodeAt=0,fails=0,lockUntil=0,faceBusy=false,wake=null,lm=null;
+async function goFull(){
+  try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen({navigationUI:'hide'})}catch{}
+  try{await navigator.keyboard?.lock?.()}catch{}
+}
+function trapHistory(){try{history.pushState(null,'',location.href)}catch{}}
+window.addEventListener('popstate',()=>{if(cfg.state==='armed'||cfg.state==='locked')trapHistory()});
+window.addEventListener('beforeunload',e=>{if(cfg.state==='armed'||cfg.state==='locked'){e.preventDefault();e.returnValue=''}});
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement){
+    if(cfg.state==='armed'&&Date.now()>armAt)intrusion('Saída da tela cheia durante a proteção');
+    if(cfg.state==='locked')st('Toque em qualquer lugar para voltar à tela cheia.');
+  }
+});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cfg.state==='locked'){goFull()}});
+
+async function arm(){
+  try{await camStart(camFacing())}catch(e){toast('Para ativar, permita a câmera. '+errMsg(e),6000);return}
+  loadModels().catch(()=>{});
+  await goFull();
+  try{wake=await navigator.wakeLock?.request('screen')}catch{}
+  lm=null;armAt=Date.now()+cfg.delay*1000;setState('armed');view('standby');trapHistory();tick();log('Proteção ativada');
+}
+function tick(){
+  if(cfg.state!=='armed')return;
+  const d=new Date();$('#clock').textContent=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  $('#dateTxt').textContent=d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  const left=Math.ceil((armAt-Date.now())/1000);$('#standbyNote').textContent=left>0?`Proteção ativa em ${left}s`:'';
+  setTimeout(tick,1000);
+}
+
+async function intrusion(reason){
+  if(cfg.state!=='armed')return;
+  setState('locked');renderLock();view('lock');trapHistory();goFull();
+  const blob=await snap();
+  log('Tentativa de uso detectada ('+(blob?'foto tirada':'sem foto')+')');
+  sendAlert(blob,'Alguém mexeu no aparelho. '+reason);
+  issueCode(false);
+}
+function renderLock(){
+  $('#lockMsg').textContent=cfg.message;$('#code').value='';st('');$('#camLock').classList.add('hidden');
+  $('#btnBioUnlock').classList.toggle('hidden',!cfg.credId);
+  $('#btnFaceUnlock').classList.toggle('hidden',!cfg.descriptors.length);
+  if(cfg.device==='desktop')setTimeout(()=>$('#code').focus(),50);
+}
+const st=t=>{$('#lockStatus').textContent=t};
+async function issueCode(manual){
+  if(manual&&Date.now()-lastCodeAt<30000){st('Aguarde alguns segundos para reenviar.');return}
+  lastCodeAt=Date.now();
+  const v=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0');
+  lockCode={v,exp:Date.now()+600000};
+  st('Enviando o código para '+mask(cfg.email)+'…');
+  const ok=await deliver(()=>sendEmail(cfg.email,{subject:'🔑 Código de desbloqueio do Vigia',message:`Código de desbloqueio: ${v}\n(válido por 10 minutos)`}),2);
+  if(cfg.state==='locked')st(ok?'Código enviado para '+mask(cfg.email):'Não consegui enviar o código. Use a biometria ou o PIN de emergência.');
+}
+async function submitCode(){
+  if(Date.now()<lockUntil){st('Muitas tentativas. Aguarde '+Math.ceil((lockUntil-Date.now())/1000)+'s.');return}
+  const v=$('#code').value.trim();if(!v)return;
+  let ok=false;
+  if(lockCode&&Date.now()<lockCode.exp&&v===lockCode.v)ok=true;
+  else if(cfg.pinHash&&/^\d{6,12}$/.test(v)&&await hashPin(v,cfg.pinSalt)===cfg.pinHash)ok=true;
+  if(ok)return unlock('código');
+  $('#code').value='';fails++;
+  if(fails>=5){fails=0;lockUntil=Date.now()+60000;st('Muitas tentativas. Aguarde 60s.');log('5 códigos errados seguidos')}
+  else st('Código incorreto.');
+}
+async function bioUnlock(){
+  try{st('Confirme com a biometria do aparelho…');await bioAuth();unlock('biometria')}catch(e){st('Biometria não confirmada. '+errMsg(e));goFull()}
+}
+async function faceUnlock(){
+  if(faceBusy)return;faceBusy=true;const pv=$('#camLock');
+  try{
+    if(!stream)await camStart(camFacing());
+    pv.srcObject=stream;pv.classList.remove('hidden');await pv.play().catch(()=>{});
+    st('Carregando reconhecimento facial…');await loadModels();st('Olhe para a câmera…');
+    let hits=0;const t0=Date.now();
+    while(faceBusy&&cfg.state==='locked'&&Date.now()-t0<25000){
+      const d=await describe(cam);
+      if(d&&bestDist(d)<TH){if(++hits>=3){
+        if(cfg.strict){st('✔ Rosto reconhecido. Agora digite o código ou use a biometria.');return}
+        return unlock('reconhecimento facial');
+      }}else hits=0;
+      await sleep(250);
+    }
+    st('Não reconheci o rosto. Tente de novo ou use o código.');
+  }catch(e){st(errMsg(e))}
+  finally{faceBusy=false;pv.classList.add('hidden')}
+}
+async function unlock(how){
+  setState('idle');lockCode=null;faceBusy=false;fails=0;
+  try{wake?.release()}catch{}wake=null;camStop();
+  try{navigator.keyboard?.unlock?.()}catch{}
+  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
+  view('panel');renderPanel();log('Desbloqueado por '+how);toast('Aparelho liberado.');
+}
+
+/* ===== Captura de eventos ===== */
+function guard(e){
+  if(cfg.state==='armed'){
+    if(Date.now()<armAt)return;
+    if(e.cancelable)e.preventDefault();e.stopPropagation();
+    intrusion('Gatilho: '+({keydown:'tecla',pointerdown:'toque/clique',touchstart:'toque',wheel:'rolagem',contextmenu:'clique direito',mousemove:'movimento do mouse'}[e.type]||e.type));
+  }else if(cfg.state==='locked')lockedGuard(e);
+}
+function lockedGuard(e){
+  if(e.type==='contextmenu'){e.preventDefault();return}
+  if(e.type==='wheel'){if(!e.target.closest('#lock'))e.preventDefault();return}
+  if(e.type==='pointerdown'){if(!document.fullscreenElement)goFull();return}
+  if(e.type==='keydown'){
+    const inLock=e.target.closest&&e.target.closest('#lock');
+    const paste=(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='v';
+    const bad=!paste&&(e.key==='Escape'||/^F\d+$/.test(e.key)||e.ctrlKey||e.metaKey||e.altKey);
+    if(bad||!inLock){e.preventDefault();e.stopPropagation();$('#code').focus();return}
+    if(e.key==='Enter'&&e.target.id==='code'){e.preventDefault();submitCode()}
+  }
+}
+['keydown','pointerdown','touchstart','contextmenu'].forEach(t=>window.addEventListener(t,guard,{capture:true,passive:false}));
+window.addEventListener('wheel',guard,{capture:true,passive:false});
+window.addEventListener('mousemove',e=>{
+  if(cfg.state!=='armed'||!cfg.mouse||Date.now()<armAt){lm=null;return}
+  if(!lm){lm=[e.clientX,e.clientY];return}
+  if(Math.hypot(e.clientX-lm[0],e.clientY-lm[1])>25)guard(e);
+},true);
+
+/* ===== Painel ===== */
+function renderPanel(){
+  const on=cfg.state==='armed'||cfg.state==='locked';
+  $('#panelTitle').textContent=on?'🔒 Proteção ativa':'Proteção desligada';
+  $('#panelInfo').innerHTML=`${cfg.device==='mobile'?'📱 Celular/Tablet':'💻 Notebook/Computador'} · ✉️ ${esc(mask(cfg.email))}<br>🙂 Rosto: ${cfg.descriptors.length?'cadastrado':'não cadastrado'} · ☝️ Biometria: ${cfg.credId?'sim':'não'} · 🔑 PIN: ${cfg.pinHash?'sim':'não'}`;
+  renderLog();
+}
+let deferred=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#installRow').classList.remove('hidden')});
+
+/* ===== Ações ===== */
+const A={
+  pickDevice(b){draft.device=b.dataset.device;$$('.pick').forEach(x=>x.classList.toggle('sel',x===b));$('#facingBox').classList.toggle('hidden',draft.device!=='mobile')},
+  async next(){
+    const err=validate(step);const box=$('#stepErr');
+    if(err){box.textContent=err;box.classList.remove('hidden');return}
+    box.classList.add('hidden');
+    if(step===5&&draft.pinPlain){draft.pinSalt=b64(crypto.getRandomValues(new Uint8Array(16)));draft.pinHash=await hashPin(draft.pinPlain,draft.pinSalt)}
+    if(step===TOTAL){
+      Object.assign(cfg,draft);delete cfg.emailConfirm;delete cfg.pinPlain;delete cfg.own;
+      cfg.done=true;cfg.state='idle';save();camStop();view('panel');renderPanel();toast('Configuração salva.');return;
+    }
+    camStop();step++;renderStep();window.scrollTo(0,0);
+  },
+  back(){camStop();if(step>1){step--;renderStep();window.scrollTo(0,0)}},
+  enroll:enrollFace,
+  async testEmail(){
+    const m=$('#emailMsg'),b=$('#btnTestEmail');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email||'')){m.textContent='Digite um e-mail válido primeiro.';m.className='msg err';return}
+    b.disabled=true;m.textContent='Enviando…';m.className='msg';
+    try{await sendEmail(draft.email,{subject:'Teste do Vigia',message:'Se você recebeu este e-mail, o envio está funcionando.'});m.textContent='Pedido enviado. Se for a primeira vez, abra o e-mail de ativação do FormSubmit e clique em ativar; depois repita o teste.';m.className='msg ok'}
+    catch(e){m.textContent='⚠ '+errMsg(e);m.className='msg err'}
+    b.disabled=false;
+  },
+  async bioReg(){const m=$('#bioMsg');try{m.textContent='Siga as instruções do aparelho…';await bioRegister();m.textContent='✔ Biometria cadastrada.';m.className='msg ok'}catch(e){m.textContent='⚠ '+errMsg(e);m.className='msg err'}},
+  arm,openSetup,
+  async install(){if(deferred){deferred.prompt();await deferred.userChoice;deferred=null;$('#installRow').classList.add('hidden')}},
+  sendCode:()=>issueCode(true),
+  bioUnlock,faceUnlock,unlockCode:submitCode
+};
+document.addEventListener('click',e=>{const a=e.target.closest?.('[data-act]');if(a&&A[a.dataset.act])A[a.dataset.act](a)});
+
+/* ===== Início ===== */
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(!cfg.done)openSetup();
+else if(cfg.state==='armed'||cfg.state==='locked'){
+  setState('locked');renderLock();view('lock');trapHistory();
+  (async()=>{
+    try{await camStart(camFacing());await sleep(800)}catch{}
+    const blob=await snap();
+    log('App reaberto com a proteção ativa');
+    sendAlert(blob,'O aplicativo foi fechado/reaberto com a proteção ativa.');
+    issueCode(false);
+  })();
+}else{view('panel');renderPanel()}
+})();
+</script>
+</body>
+</html>
